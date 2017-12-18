@@ -14,6 +14,14 @@ Told me that even if it could fit (uhh, 32 bits is 4 gb?) it would take too long
 So, let's see how long it does take to generate ;)
 
 
+Current stats, per 10mm:
+- C# dotnet core 2.0.3 ~1.7s
+- Java 9 ~9s
+- JRuby 9.1.15.0 ~29s
+- Ruby 2.4.3 ~31-34s
+
+
+Setup for running a test:
 ```
 TYPE=rb
 PROFILE=rogusdev
@@ -21,7 +29,78 @@ REGION=us-east-1
 KEYPAIR=ec2-keypair
 BUCKET=...
 
+# https://cloud-images.ubuntu.com/locator/ec2/  # 64 us-east-1 ebs hvm
+IMAGEID=ami-3dec9947
 
+# http://docs.aws.amazon.com/cli/latest/userguide/controlling-output.html#controlling-output-filter
+SGID=$(aws ec2 describe-security-groups --profile $PROFILE --region $REGION --query 'SecurityGroups[?GroupName==`ssh-anywhere`].GroupId' --output text)
+echo $SGID
+
+echo $PROFILE $REGION $BUCKET $TYPE $KEYPAIR $IMAGEID $SGID
+```
+
+
+Run this to spawn an ec2 instance that will test an individual countbits type:
+```
+# https://alestic.com/2013/11/aws-cli-query/
+# http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html
+# https://stackoverflow.com/questions/10125311/how-to-fire-ec2-instances-and-upload-run-a-startup-script-on-each-of-them
+INSTANCEID=$(aws ec2 run-instances \
+    --profile $PROFILE \
+    --region $REGION \
+    --output text \
+    --query 'Instances[*].InstanceId' \
+    --image-id $IMAGEID \
+    --key-name $KEYPAIR \
+    --security-group-ids $SGID \
+    --instance-type t2.micro \
+    --user-data file://./$TYPE/run.sh \
+    --instance-initiated-shutdown-behavior terminate \
+    --iam-instance-profile Name="s3-put-profile" \
+    --count 1)
+echo $INSTANCEID
+
+
+aws ec2 create-tags \
+    --profile $PROFILE \
+    --region $REGION \
+    --resources $INSTANCEID \
+    --tags Key=Name,Value="countbits $TYPE"
+
+DOMAIN=$(aws ec2 describe-instances \
+    --profile $PROFILE \
+    --region $REGION \
+    --instance-ids $INSTANCEID \
+    --output text \
+    --query 'Reservations[*].Instances[*].PublicDnsName')
+echo $DOMAIN
+```
+
+
+Some debugging and lookup tools you might want afterwards:
+```
+# http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AccessingInstancesLinux.html
+ssh -i ~/.ssh/$KEYPAIR.pem ubuntu@$DOMAIN
+
+tail -f /var/log/cloud-init-output.log
+
+
+aws s3 ls --profile $PROFILE $BUCKET/$TYPE/
+aws s3 cp --profile $PROFILE s3://$BUCKET/$TYPE/output_DATETIME.json ./
+
+# https://stedolan.github.io/jq/tutorial/
+sudo apt-get install jq
+cat output_DATETIME.json | jq
+
+
+aws ec2 describe-instances --profile $PROFILE --region $REGION --query 'Reservations[*].Instances[*].[LaunchTime, InstanceId, State.Name, Tags[0].Value]' --output text
+
+aws ec2 terminate-instances --profile $PROFILE --region $REGION --instance-ids $INSTANCEID
+```
+
+
+Initial configuration to get all the right permissions, etc in place:
+```
 # http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html
 cat << EOF > ec2-role-trust-policy.json
 {
@@ -88,71 +167,21 @@ chmod 400 ~/.ssh/$KEYPAIR.pem
 # http://skillslane.com/aws-tutorial-vpc-launch-instance-cli/
 # http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-subnets-commands-example.html
 # https://console.aws.amazon.com/vpc/home?region=$REGION
-VPCID=`aws ec2 describe-vpcs --profile $PROFILE --query 'Vpcs[*].VpcId' --output text`
+VPCID=`aws ec2 describe-vpcs --profile $PROFILE --region $REGION --query 'Vpcs[*].VpcId' --output text`
 echo $VPCID
 
 # http://docs.aws.amazon.com/cli/latest/userguide/cli-ec2-sg.html
 # http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-network-security.html
 # http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_SecurityGroups.html#VPC_Security_Group_Differences
-aws ec2 describe-security-groups --profile $PROFILE
-SGID=`aws ec2 create-security-group --profile $PROFILE --vpc-id $VPCID --group-name ssh-anywhere --description "SSH from anywhere" --query 'GroupId' --output text`
-aws ec2 authorize-security-group-ingress --profile $PROFILE --group-id $SGID --protocol tcp --port 22 --cidr 0.0.0.0/0
-
-
-# https://cloud-images.ubuntu.com/locator/ec2/  # 64 us-east-1 ebs hvm
-IMAGEID=ami-3dec9947
-
-
-# https://alestic.com/2013/11/aws-cli-query/
-# http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html
-# https://stackoverflow.com/questions/10125311/how-to-fire-ec2-instances-and-upload-run-a-startup-script-on-each-of-them
-INSTANCEID=$(aws ec2 run-instances \
+aws ec2 describe-security-groups --profile $PROFILE --region $REGION
+SGID=$(aws ec2 create-security-group \
     --profile $PROFILE \
     --region $REGION \
-    --output text \
-    --query 'Instances[*].InstanceId' \
-    --image-id $IMAGEID \
-    --key-name $KEYPAIR \
-    --security-group-ids $SGID \
-    --instance-type t2.micro \
-    --user-data file://./$TYPE/run.sh \
-    --instance-initiated-shutdown-behavior terminate \
-    --iam-instance-profile Name="s3-put-profile" \
-    --count 1)
-echo $INSTANCEID
-
-
-aws ec2 create-tags \
-    --profile $PROFILE \
-    --region $REGION \
-    --resources $INSTANCEID \
-    --tags Key=Name,Value="countbits $TYPE"
-
-DOMAIN=$(aws ec2 describe-instances \
-    --profile $PROFILE \
-    --region $REGION \
-    --instance-ids $INSTANCEID \
-    --output text \
-    --query 'Reservations[*].Instances[*].PublicDnsName')
-echo $DOMAIN
-
-# http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AccessingInstancesLinux.html
-ssh -i ~/.ssh/$KEYPAIR.pem ubuntu@$DOMAIN
-
-
-aws s3 ls --profile $PROFILE $BUCKET/$TYPE/
-aws s3 cp --profile $PROFILE s3://$BUCKET/$TYPE/output_DATETIME.json ./
-
-# https://stedolan.github.io/jq/tutorial/
-sudo apt-get install jq
-cat output_DATETIME.json | jq
-
-
-aws ec2 describe-instances --profile $PROFILE --region $REGION
-
-aws ec2 terminate-instances --profile $PROFILE --region $REGION --instance-ids $INSTANCEID
-
+    --vpc-id $VPCID \
+    --group-name ssh-anywhere \
+    --description "SSH from anywhere"
+    --query 'GroupId'
+    --output text)
+aws ec2 authorize-security-group-ingress --profile $PROFILE --region $REGION --group-id $SGID --protocol tcp --port 22 --cidr 0.0.0.0/0
 ```
-
-
 

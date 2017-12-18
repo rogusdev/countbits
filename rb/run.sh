@@ -7,8 +7,9 @@ apt-get install -yq git build-essential gcc awscli
 
 git clone https://github.com/rogusdev/countbits.git
 
+# https://github.com/rbenv/ruby-build/issues/156
 curl https://cache.ruby-lang.org/pub/ruby/2.4/ruby-2.4.3.tar.gz \
-  | tar xvz && cd ruby-* && ./configure && make && make install && cd .. && rm -rf ruby-*
+  | tar xvz && cd ruby-* && ./configure --disable-install-doc && make && make install && cd .. && rm -rf ruby-*
 
 OUTFILE=output_`date +%Y%m%d%H%M%S`.json
 ruby countbits/rb/countbits.rb > $OUTFILE
