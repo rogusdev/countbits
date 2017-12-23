@@ -11,11 +11,11 @@ echo oracle-java9-installer shared/accepted-oracle-license-v1-1 select true | su
 sudo apt-get update
 sudo apt-get install -yq git awscli oracle-java9-installer
 
-export JAVA_HOME=/usr/lib/jvm/java-9-oracle
-
 git clone https://github.com/rogusdev/countbits.git
 
-cd countbits/java
+export JAVA_HOME=/usr/lib/jvm/java-9-oracle
+
+cd countbits/java2
 
 # https://github.com/google/gson
 wget http://repo1.maven.org/maven2/com/google/code/gson/gson/2.8.2/gson-2.8.2.jar
@@ -24,7 +24,8 @@ OUTFILE=output_`date +%Y%m%d%H%M%S`.json
 javac -cp gson-2.8.2.jar CountBits.java
 java -cp gson-2.8.2.jar:. CountBits > $OUTFILE
 
-aws s3 cp $OUTFILE s3://rogusdev-countbits/java/
+aws s3 cp $OUTFILE s3://rogusdev-countbits/java2/
+#aws s3 cp /var/log/cloud-init-output.log s3://rogusdev-countbits/java2/
 
 # https://stackoverflow.com/questions/10541363/self-terminating-aws-ec2-instance
 # https://askubuntu.com/questions/578144/why-doesnt-running-sudo-shutdown-now-shut-down/578155

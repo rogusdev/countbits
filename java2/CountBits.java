@@ -4,8 +4,11 @@ import java.io.DataOutputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Map;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
 
@@ -25,24 +28,33 @@ public class CountBits
     private static final long START = System.nanoTime();
 
     // https://stackoverflow.com/questions/4300653/conversion-of-nanoseconds-to-milliseconds-and-nanoseconds-999999-in-java
-    private static Long elapsedMs() { return (System.nanoTime() - START) / 1000000; }
+    private static long elapsedMs() { return (System.nanoTime() - START) / 1000000; }
+
+    private static List<Time> times = new ArrayList<Time>();
+
+    private static long addTime(String key) {
+        long ms = elapsedMs();
+        times.add(new Time(key, ms));
+        return ms;
+    }
 
     public static void main(String[] args) throws IOException, FileNotFoundException
     {
-        Map<String, Long> times = new HashMap<String, Long>();
-        times.put("start", elapsedMs());
+        addTime("start");
 
         for (int i = 0; i < MAXBITS; i++) { b[i] = 1 << i; }
 
-        times.put("array", elapsedMs());
+        addTime("array");
 
         // https://stackoverflow.com/questions/6981555/how-to-output-binary-data-to-a-file-in-java
         DataOutputStream os = new DataOutputStream(new FileOutputStream("counts.bin"));
 
+        long first = addTime("file");
+
         byte c;
         for (int j = BOT; j < TOP; j++)
         {
-            if ((j % 10000000) == 0) { times.put(Integer.toString(j), elapsedMs()); }
+            if ((j % 10000000) == 0) { addTime(Integer.toString(j)); }
             c = (byte)(j < 0 ? 1 : 0);
             for (int i = 0; i < MAXBITS; i++)
              { c += (byte)((j & b[i]) >> i); }
@@ -54,10 +66,25 @@ public class CountBits
         os.writeByte((byte)MAXBITS);
 
         os.close();
-        times.put("end", elapsedMs());
-        times.put("average", (times.get("end") - times.get("array")) / (times.size() - 3));
+        long last = addTime("end");
+        long average = (last - first) / (times.size() - 4);
+        times.add(new Time("average", average));
 
-        System.out.println(new Gson().toJson(times));
+        System.out.println(new Gson().toJson(
+            times.stream().collect(Collectors.toMap(t -> t.key, t -> t.value))
+        ));
+    }
+
+    private static class Time
+    {
+        public String key;
+        public long value;
+
+        public Time(String key, long value)
+        {
+            this.key = key;
+            this.value = value;
+        }
     }
 }
 

@@ -21,8 +21,9 @@ end
 times[:array] = elapsed_ms
 
 File.open('counts.bin', 'wb') do |f|
-  BOT.upto TOP do |j|
+  times[:file] = elapsed_ms
 
+  BOT.upto TOP do |j|
     times[j.to_s] = elapsed_ms if (j % 10000000) == 0
     c = j < 0 ? 1 : 0
     MAXBITS.times { |i| c += (j & b[i]) >> i }
@@ -35,7 +36,7 @@ File.open('counts.bin', 'wb') do |f|
 end
 
 times[:end] = elapsed_ms
-times[:average] = (times[:end] - times[:array]) / (times.count - 3)
+times[:average] = (times[:end] - times[:file]) / (times.count - 4)
 
 puts times.to_json
 

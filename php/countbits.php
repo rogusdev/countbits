@@ -8,43 +8,65 @@ class CountBits
 	// must be less than 126 to be a positive int in a byte!
 	//  max bits should be ONE less than the actual size, for shifting negative ints
 	const MAXBITS = 31;
-	private static $bits;
+//	const BOT = -2147483648;
+//	const TOP = 2147483647;
+	const BOT = -147483648;
+	const TOP = 147483647;
 
-	public static function fillBits ()
+	private $bits;
+	public $times = array();
+
+    private $start;
+
+	private function elapsedMs()
 	{
-		self::$bits = array();
-		for ($i = 0; $i < self::MAXBITS; $i++)
-		 { self::$bits[$i] = 1 << $i; }
+		return (int)((microtime(true) - $this->start) * 1000);
 	}
 
-	public function __construct () { self::fillBits(); }
-
-	public static function writeCounts ()
+	private function fillBits ()
 	{
-//var_dump(self::$bits);
-		$fp = fopen('counts.bin', 'w');
-		for ($j = -2147483648; $j < 2147483647; $j++)
+		$this->bits = array();
+		for ($i = 0; $i < self::MAXBITS; $i++)
+		 { $this->bits[$i] = 1 << $i; }
+	}
+
+	public function __construct ()
+    {
+		$this->start = microtime(true);
+		$this->times["start"] = $this->elapsedMs();
+		$this->fillBits();
+		$this->times["array"] = $this->elapsedMs();
+    }
+
+	public function writeCounts ()
+	{
+		$f = fopen('counts.bin', 'w');
+		$this->times["file"] = $this->elapsedMs();
+
+		for ($j = self::BOT; $j < self::TOP; $j++)
 		{
-if (($j % 10000000) == 0) { echo "$j: ".date('r')."\n"; }
+			if (($j % 10000000) == 0) { $this->times[(string)$j] = $this->elapsedMs(); }
 			$c = $j < 0 ? 1 : 0;
 			for ($i = 0; $i < self::MAXBITS; $i++)
-//		 	 { $c += (($j & self::$bits[$i]) == self::$bits[$i] ? 1 : 0); }
-		 	 { $c += ($j & self::$bits[$i]) >> $i; }
-			fwrite($fp, chr($c));
+//		 	 { $c += (($j & $this->bits[$i]) == $this->bits[$i] ? 1 : 0); }
+		 	 { $c += ($j & $this->bits[$i]) >> $i; }
+			fwrite($f, chr($c));
 		}
 
 		// last positive int is for sure MAXBITS on bits
 		//  we have to do this out of loop or else int rolls around and becomes infinite loop!
-		fwrite($fp, chr(self::MAXBITS));
+		fwrite($f, chr(self::MAXBITS));
+		fclose($f);
 
-		fclose($fp);
+		$this->times["end"] = $this->elapsedMs();
+		$this->times["average"] = (int)(($this->times["end"] - $this->times["array"]) / (count($this->times) - 4));
 	}
 }
 
-echo date('r')."\n";
 $cb = new CountBits();
-echo date('r')."\n";
-$cb::writeCounts();
-echo date('r')."\n";
+$cb->writeCounts();
+
+echo json_encode($cb->times);
 
 ?>
+

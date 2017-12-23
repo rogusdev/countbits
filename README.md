@@ -15,16 +15,19 @@ So, let's see how long it does take to generate ;)
 
 
 Current stats, per 10mm:
-- C# dotnet core 2.0.3 ~1.7s
-- Java 9 ~9s
+- C# dotnet core 2.0.3 ~1.8s
+- Java 9 (Classes) ~9s
+- Java 9 (Optimized primitives) ~9s
+- Go 1.9.2 ~11s
+- PHP 7.0 ~25s
 - JRuby 9.1.15.0 ~29s
 - Ruby 2.4.3 ~31-34s
 
 
 Setup for running a test:
 ```
-TYPE=rb
-PROFILE=rogusdev
+TYPE=ruby
+PROFILE=...
 REGION=us-east-1
 KEYPAIR=ec2-keypair
 BUCKET=...

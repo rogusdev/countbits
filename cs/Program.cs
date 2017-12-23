@@ -32,6 +32,8 @@ namespace CountBits
 
             BinaryWriter f = new BinaryWriter(File.Open("counts.bin", FileMode.Create));
 
+            times["file"] = stopwatch.ElapsedMilliseconds;
+
             byte c;
             for (int j = BOT; j < TOP; j++)
             {
@@ -48,7 +50,7 @@ namespace CountBits
 
             f.Close();
             times["end"] = stopwatch.ElapsedMilliseconds;
-            times["average"] = (times["end"] - times["array"]) / (times.Count - 3);
+            times["average"] = (times["end"] - times["file"]) / (times.Count - 4);
 
             stopwatch.Stop();
 

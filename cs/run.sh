@@ -10,7 +10,7 @@ curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo te
 sudo sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/microsoft-ubuntu-xenial-prod xenial main" > /etc/apt/sources.list.d/dotnetdev.list' 
 
 apt-get update
-apt-get install -yq git awscli dotnet-sdk-2.0.3 
+apt-get install -yq git awscli dotnet-sdk-2.0.3
 
 git clone https://github.com/rogusdev/countbits.git
 
@@ -27,6 +27,7 @@ OUTFILE=output_`date +%Y%m%d%H%M%S`.json
 dotnet run -p countbits/cs/CountBits.csproj > $OUTFILE
 
 aws s3 cp $OUTFILE s3://rogusdev-countbits/cs/
+#aws s3 cp /var/log/cloud-init-output.log s3://rogusdev-countbits/cs/
 
 # https://stackoverflow.com/questions/10541363/self-terminating-aws-ec2-instance
 # https://askubuntu.com/questions/578144/why-doesnt-running-sudo-shutdown-now-shut-down/578155
