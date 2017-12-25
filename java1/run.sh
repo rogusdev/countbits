@@ -20,8 +20,8 @@ cd countbits/java1
 # https://github.com/google/gson
 wget http://repo1.maven.org/maven2/com/google/code/gson/gson/2.8.2/gson-2.8.2.jar
 
-OUTFILE=output_`date +%Y%m%d%H%M%S`.json
 javac -cp gson-2.8.2.jar CountBits.java
+OUTFILE=output_`date +%Y%m%d%H%M%S`.json
 java -cp gson-2.8.2.jar:. CountBits > $OUTFILE
 
 aws s3 cp $OUTFILE s3://rogusdev-countbits/java1/

@@ -13,9 +13,9 @@ wget -L https://redirector.gvt1.com/edgedl/go/go1.9.2.linux-amd64.tar.gz \
 
 export PATH=/usr/local/go/bin:$PATH
 
-OUTFILE=output_`date +%Y%m%d%H%M%S`.json
 cd countbits/go
 go build countbits.go
+OUTFILE=output_`date +%Y%m%d%H%M%S`.json
 ./countbits > $OUTFILE
 
 aws s3 cp $OUTFILE s3://rogusdev-countbits/go/

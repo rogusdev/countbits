@@ -15,13 +15,16 @@ So, let's see how long it does take to generate ;)
 
 
 Current stats, per 10mm:
-- C# dotnet core 2.0.3 ~1.8s
+- C ~1.0s
+- C# dotnet core 2.0.3 ~1.7-1.8s
 - Java 9 (Classes) ~9s
 - Java 9 (Optimized primitives) ~9s
-- Go 1.9.2 ~11s
+- Node 8 ~9-10s
+- Go 1.9.2 ~10-11s
 - PHP 7.0 ~25s
-- JRuby 9.1.15.0 ~29s
+- JRuby 9.1.15.0 ~25-29s
 - Ruby 2.4.3 ~31-34s
+- Python 3 ~320-450s (yes 5-8 minutes!)
 
 
 Setup for running a test:
@@ -36,7 +39,11 @@ BUCKET=...
 IMAGEID=ami-3dec9947
 
 # http://docs.aws.amazon.com/cli/latest/userguide/controlling-output.html#controlling-output-filter
-SGID=$(aws ec2 describe-security-groups --profile $PROFILE --region $REGION --query 'SecurityGroups[?GroupName==`ssh-anywhere`].GroupId' --output text)
+SGID=$(aws ec2 describe-security-groups \
+    --profile $PROFILE \
+    --region $REGION \
+    --query 'SecurityGroups[?GroupName==`ssh-anywhere`].GroupId' \
+    --output text)
 echo $SGID
 
 echo $PROFILE $REGION $BUCKET $TYPE $KEYPAIR $IMAGEID $SGID

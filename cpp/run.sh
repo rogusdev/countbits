@@ -7,8 +7,8 @@ apt-get install -yq git awscli gcc
 
 git clone https://github.com/rogusdev/countbits.git
 
-OUTFILE=output_`date +%Y%m%d%H%M%S`.json
 gcc -Wall countbits.cpp -o countbits
+OUTFILE=output_`date +%Y%m%d%H%M%S`.json
 countbits > $OUTFILE
 
 aws s3 cp $OUTFILE s3://rogusdev-countbits/cpp/

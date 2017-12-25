@@ -37,7 +37,8 @@ namespace CountBits
             byte c;
             for (int j = BOT; j < TOP; j++)
             {
-                if ((j % 10000000) == 0) { times[j.ToString()] = stopwatch.ElapsedMilliseconds; }
+                if ((j % 10000000) == 0)
+                    times[j.ToString()] = stopwatch.ElapsedMilliseconds;
                 c = (byte)(j < 0 ? 1 : 0);
                 for (int i = 0; i < MAXBITS; i++)
                  { c += (byte)((j & b[i]) >> i); }

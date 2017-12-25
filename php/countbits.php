@@ -1,8 +1,5 @@
 <?php
 
-// about 3 minutes per 10 million numbers, estimate around 20 hours for all 4+ billion, creating 4 gb file lookup table
-//  somehow, different size VMs made almost no difference at all: smallest RSC, 2nd biggest RSC, EC2 c1.xlarge...
-
 class CountBits
 {
 	// must be less than 126 to be a positive int in a byte!
