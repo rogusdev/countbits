@@ -14,17 +14,33 @@ Told me that even if it could fit (uhh, 32 bits is 4 gb?) it would take too long
 So, let's see how long it does take to generate ;)
 
 
-Current stats, per 10mm:
+Current stats (post meltdown + spectre w ami-41e0b93b), per 10mm:
+- C ~1.0s
+- C# dotnet core 2.0.3 ~1.7-1.8s
+- Java 9 (Classes) ~11s *
+- Java 9 (Optimized primitives) ~11s *
+- Javascript / Node 8 (Readable -> pipe) ~9-10s
+- Go 1.9.2 ~13s *
+- PHP 7.0 ~28s *
+- JRuby 9.1.15.0 ~31s *
+- Ruby 2.4.3 ~34s
+- Python 3 ~320-450s (yes 5-8 minutes!)
+- Javascript / Node 8 (Naive write) OOM crash
+^ times with a * went up, others stayed the same
+
+
+Current stats (pre meltdown + spectre w ami-3dec9947), per 10mm:
 - C ~1.0s
 - C# dotnet core 2.0.3 ~1.7-1.8s
 - Java 9 (Classes) ~9s
 - Java 9 (Optimized primitives) ~9s
-- Node 8 ~9-10s
+- Javascript / Node 8 (Readable -> pipe) ~9-10s
 - Go 1.9.2 ~10-11s
 - PHP 7.0 ~25s
-- JRuby 9.1.15.0 ~25-29s
-- Ruby 2.4.3 ~31-34s
+- JRuby 9.1.15.0 ~25-30s
+- Ruby 2.4.3 ~31-35s
 - Python 3 ~320-450s (yes 5-8 minutes!)
+- Javascript (Naive write) OOM crash
 
 
 Setup for running a test:
@@ -36,7 +52,7 @@ KEYPAIR=ec2-keypair
 BUCKET=...
 
 # https://cloud-images.ubuntu.com/locator/ec2/  # 64 us-east-1 ebs hvm
-IMAGEID=ami-3dec9947
+IMAGEID=ami-41e0b93b
 
 # http://docs.aws.amazon.com/cli/latest/userguide/controlling-output.html#controlling-output-filter
 SGID=$(aws ec2 describe-security-groups \

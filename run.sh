@@ -5,7 +5,7 @@ KEYPAIR=ec2-keypair
 BUCKET=...
 
 # https://cloud-images.ubuntu.com/locator/ec2/  # 64 us-east-1 ebs hvm
-IMAGEID=ami-3dec9947
+IMAGEID=ami-41e0b93b
 
 # http://docs.aws.amazon.com/cli/latest/userguide/controlling-output.html#controlling-output-filter
 SGID=$(aws ec2 describe-security-groups \
