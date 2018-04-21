@@ -5,7 +5,14 @@ KEYPAIR=ec2-keypair
 BUCKET=...
 
 # https://cloud-images.ubuntu.com/locator/ec2/  # 64 us-east-1 ebs hvm
-IMAGEID=ami-41e0b93b
+IMAGEID=ami-6dfe5010
+
+
+BENCHMARK=$1
+
+# https://stackoverflow.com/questions/2427995/bash-no-arguments-warning-and-case-decisions
+if [[ $# -eq 0 ]] ; then BENCHMARK='countbits'; fi
+
 
 # http://docs.aws.amazon.com/cli/latest/userguide/controlling-output.html#controlling-output-filter
 SGID=$(aws ec2 describe-security-groups \
@@ -19,8 +26,7 @@ echo $PROFILE $REGION $BUCKET $TYPE $KEYPAIR $IMAGEID $SGID
 
 
 # https://www.cyberciti.biz/faq/bash-for-loop-array/
-types=( c cs go java1 java2 jruby js1 js2 php python ruby )
-# cpp elixir rust
+types=( c csharp elixir go java1 java2 jruby javascript1 javascript2 php python ruby rust )
 
 for TYPE in "${types[@]}"
 do
@@ -36,7 +42,7 @@ do
         --key-name $KEYPAIR \
         --security-group-ids $SGID \
         --instance-type t2.micro \
-        --user-data file://./$TYPE/run.sh \
+        --user-data file://$BENCHMARK/$TYPE/run.sh \
         --instance-initiated-shutdown-behavior terminate \
         --iam-instance-profile Name="s3-put-profile" \
         --count 1)
@@ -47,7 +53,7 @@ do
         --profile $PROFILE \
         --region $REGION \
         --resources $INSTANCEID \
-        --tags Key=Name,Value="countbits $TYPE"
+        --tags Key=Name,Value="$BENCHMARK $TYPE"
 
     DOMAIN=$(aws ec2 describe-instances \
         --profile $PROFILE \

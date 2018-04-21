@@ -13,7 +13,7 @@ class CountBits
 	private $bits;
 	public $times = array();
 
-    private $start;
+	private $start;
 
 	private function elapsedMs()
 	{
@@ -28,12 +28,12 @@ class CountBits
 	}
 
 	public function __construct ()
-    {
+	{
 		$this->start = microtime(true);
 		$this->times["start"] = $this->elapsedMs();
 		$this->fillBits();
 		$this->times["array"] = $this->elapsedMs();
-    }
+	}
 
 	public function writeCounts ()
 	{

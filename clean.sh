@@ -1,26 +1,10 @@
 
 PROFILE=...
-REGION=us-east-1
-KEYPAIR=ec2-keypair
 BUCKET=...
-
-# https://cloud-images.ubuntu.com/locator/ec2/  # 64 us-east-1 ebs hvm
-IMAGEID=ami-41e0b93b
-
-# http://docs.aws.amazon.com/cli/latest/userguide/controlling-output.html#controlling-output-filter
-SGID=$(aws ec2 describe-security-groups \
-    --profile $PROFILE \
-    --region $REGION \
-    --query 'SecurityGroups[?GroupName==`ssh-anywhere`].GroupId' \
-    --output text)
-echo $SGID
-
-echo $PROFILE $REGION $BUCKET $TYPE $KEYPAIR $IMAGEID $SGID
 
 
 # https://www.cyberciti.biz/faq/bash-for-loop-array/
-types=( c cs go java1 java2 jruby js1 js2 php python ruby )
-# cpp elixir rust
+types=( c csharp elixir go java1 java2 jruby javascript1 javascript2 php python ruby rust )
 
 for TYPE in "${types[@]}"
 do
@@ -41,4 +25,3 @@ do
         fi
     done
 done
-
