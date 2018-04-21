@@ -4,7 +4,7 @@ BUCKET=...
 
 
 # https://www.cyberciti.biz/faq/bash-for-loop-array/
-types=( c csharp elixir go java1 java2 jruby javascript1 javascript2 php python ruby rust )
+types=( c csharp elixir go java1 java2 jruby javascript1 javascript2 php python3 ruby rust )
 
 for TYPE in "${types[@]}"
 do
@@ -16,7 +16,7 @@ do
 
     for file in "${files[@]}"
     do
-        if [[ $file =~ output_.*\.json ]]; then
+        if [[ $file =~ .*_.*\.json ]]; then
             aws s3 cp --profile $PROFILE s3://$BUCKET/$TYPE/$file ./${TYPE}_${file}
             aws s3 rm --profile $PROFILE s3://$BUCKET/$TYPE/$file
         elif [[ $file = cloud-init-output.log ]]; then

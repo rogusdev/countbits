@@ -1,8 +1,8 @@
 
 PROFILE=...
+BUCKET=...
 REGION=us-east-1
 KEYPAIR=ec2-keypair
-BUCKET=...
 
 # https://cloud-images.ubuntu.com/locator/ec2/  # 64 us-east-1 ebs hvm
 IMAGEID=ami-6dfe5010
@@ -26,7 +26,7 @@ echo $PROFILE $REGION $BUCKET $TYPE $KEYPAIR $IMAGEID $SGID
 
 
 # https://www.cyberciti.biz/faq/bash-for-loop-array/
-types=( c csharp elixir go java1 java2 jruby javascript1 javascript2 php python ruby rust )
+types=( c csharp elixir go java1 java2 jruby javascript1 javascript2 php python3 ruby rust )
 
 for TYPE in "${types[@]}"
 do
@@ -66,5 +66,8 @@ done
 
 echo "aws ec2 describe-instances --profile $PROFILE --region $REGION --query 'Reservations[*].Instances[*].[LaunchTime, InstanceId, State.Name, Tags[0].Value]' --output text"
 
-aws ec2 describe-instances --profile $PROFILE --region $REGION --query 'Reservations[*].Instances[*].[LaunchTime, InstanceId, State.Name, Tags[0].Value]' --output text
-
+aws ec2 describe-instances \
+    --profile $PROFILE \
+    --region $REGION \
+    --query 'Reservations[*].Instances[*].[LaunchTime, InstanceId, State.Name, Tags[0].Value]' \
+    --output text
