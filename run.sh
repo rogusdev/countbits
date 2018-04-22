@@ -1,6 +1,6 @@
 
 PROFILE=...
-BUCKET=...
+export BUCKET=...
 REGION=us-east-1
 KEYPAIR=ec2-keypair
 
@@ -8,7 +8,7 @@ KEYPAIR=ec2-keypair
 IMAGEID=ami-6dfe5010
 
 
-BENCHMARK=$1
+export BENCHMARK=$1
 
 # https://stackoverflow.com/questions/2427995/bash-no-arguments-warning-and-case-decisions
 if [[ $# -eq 0 ]] ; then BENCHMARK='countbits'; fi
@@ -26,12 +26,35 @@ echo $PROFILE $REGION $BUCKET $TYPE $KEYPAIR $IMAGEID $SGID
 
 
 # https://www.cyberciti.biz/faq/bash-for-loop-array/
-types=( c csharp elixir go java1 java2 jruby javascript1 javascript2 php python3 ruby rust )
+types=( c csharp elixir go java java_1 java_2 jruby javascript javascript_1 javascript_2 php python3 ruby rust )
 
 for TYPE in "${types[@]}"
 do
+    export TYPE
+    # https://stackoverflow.com/questions/1494178/how-to-define-hash-tables-in-bash
+    export LANG=${TYPE%%_*}
+    # https://unix.stackexchange.com/questions/62333/setting-a-shell-variable-in-a-null-coalescing-fashion
+    #export LANG=${3:-$TYPE}
+
+    # https://stackoverflow.com/questions/59838/check-if-a-directory-exists-in-a-shell-script
+    if [ ! -d "$BENCHMARK/$TYPE" ]; then
+        continue
+    fi
+
     echo "aws s3 ls --profile $PROFILE $BUCKET/$TYPE/"
     aws s3 ls --profile $PROFILE $BUCKET/$TYPE/
+
+    # https://superuser.com/questions/133780/in-bash-how-do-i-escape-an-exclamation-mark
+    # https://stackoverflow.com/questions/10683349/forcing-bash-to-expand-variables-in-a-string-loaded-from-a-file
+    USERDATA=$(
+        echo -e "#"'!'"/bin/bash\n\n# ----- CLONE -----\n"
+        cat clone_repo.sh
+        echo -e "\n# ----- SETUP -----\n"
+        cat setup/$LANG/setup.sh
+        echo -e "\n# ----- BUILD -----\n"
+        echo -e "cd countbits/$BENCHMARK/$TYPE && . ./build.sh\n\n# ----- RUN AND COPY -----\n"
+        envsubst \$BUCKET,\$BENCHMARK,\$TYPE < benchmark_type.sh
+    )
 
     INSTANCEID=$(aws ec2 run-instances \
         --profile $PROFILE \
@@ -42,7 +65,7 @@ do
         --key-name $KEYPAIR \
         --security-group-ids $SGID \
         --instance-type t2.micro \
-        --user-data file://$BENCHMARK/$TYPE/run.sh \
+        --user-data "$USERDATA" \
         --instance-initiated-shutdown-behavior terminate \
         --iam-instance-profile Name="s3-put-profile" \
         --count 1)

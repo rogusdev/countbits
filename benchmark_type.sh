@@ -1,14 +1,9 @@
-BENCHMARK=$1
-TYPE=$2
-# https://unix.stackexchange.com/questions/62333/setting-a-shell-variable-in-a-null-coalescing-fashion
-LANG=${3:-$TYPE}
+OUTFILE=${BENCHMARK}_`date +%Y%m%d%H%M%S`.json
+./$BENCHMARK > $OUTFILE
 
+aws s3 cp $OUTFILE s3://$BUCKET/$TYPE/
+aws s3 cp /var/log/cloud-init-output.log s3://$BUCKET/$TYPE/
 
-. ../../clone_repo.sh
-
-. ../../setup/$LANG/setup.sh
-
-cd $BENCHMARK/$TYPE
-. ./build.sh
-
-. ../../run_copy_type.sh $BENCHMARK $TYPE
+# https://stackoverflow.com/questions/10541363/self-terminating-aws-ec2-instance
+# https://askubuntu.com/questions/578144/why-doesnt-running-sudo-shutdown-now-shut-down/578155
+shutdown -h now

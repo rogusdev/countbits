@@ -4,7 +4,7 @@ BUCKET=...
 
 
 # https://www.cyberciti.biz/faq/bash-for-loop-array/
-types=( c csharp elixir go java1 java2 jruby javascript1 javascript2 php python3 ruby rust )
+types=( c csharp elixir go java java_1 java_2 jruby javascript javascript_1 javascript_2 php python3 ruby rust )
 
 for TYPE in "${types[@]}"
 do
