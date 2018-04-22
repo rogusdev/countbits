@@ -11,8 +11,13 @@ IMAGEID=ami-6dfe5010
 export BENCHMARK=$1
 
 # https://stackoverflow.com/questions/2427995/bash-no-arguments-warning-and-case-decisions
-if [[ $# -eq 0 ]] ; then BENCHMARK='countbits'; fi
+if [[ $# -eq 0 ]]; then BENCHMARK='countbits'; fi
 
+case "$1" in
+    # https://unix.stackexchange.com/questions/62333/setting-a-shell-variable-in-a-null-coalescing-fashion
+    fibonacci) export ARGS=${2:-42} ;;
+    *) ;;
+esac
 
 # http://docs.aws.amazon.com/cli/latest/userguide/controlling-output.html#controlling-output-filter
 SGID=$(aws ec2 describe-security-groups \
@@ -33,8 +38,6 @@ do
     export TYPE
     # https://stackoverflow.com/questions/1494178/how-to-define-hash-tables-in-bash
     export LANG=${TYPE%%_*}
-    # https://unix.stackexchange.com/questions/62333/setting-a-shell-variable-in-a-null-coalescing-fashion
-    #export LANG=${3:-$TYPE}
 
     # https://stackoverflow.com/questions/59838/check-if-a-directory-exists-in-a-shell-script
     if [ ! -d "$BENCHMARK/$TYPE" ]; then
@@ -53,7 +56,7 @@ do
         cat setup/$LANG/setup.sh
         echo -e "\n# ----- BUILD -----\n"
         echo -e "cd countbits/$BENCHMARK/$TYPE && . ./build.sh\n\n# ----- RUN AND COPY -----\n"
-        envsubst \$BUCKET,\$BENCHMARK,\$TYPE < benchmark_type.sh
+        envsubst \$BUCKET,\$BENCHMARK,\$TYPE,\$ARGS < benchmark_type.sh
     )
 
     INSTANCEID=$(aws ec2 run-instances \
@@ -86,6 +89,9 @@ do
         --query 'Reservations[*].Instances[*].PublicDnsName')
     echo "ssh -i ~/.ssh/$KEYPAIR.pem ubuntu@$DOMAIN"
 done
+
+
+unset ARGS  # in case it was set for fibonacci
 
 echo "aws ec2 describe-instances --profile $PROFILE --region $REGION --query 'Reservations[*].Instances[*].[LaunchTime, InstanceId, State.Name, Tags[0].Value]' --output text"
 

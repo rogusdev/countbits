@@ -1,9 +1,8 @@
-countbits
-=========
+# countbits
 
-exploring the speed of varying languages at counting "on" bits in integers
+exploring the speed of varying languages at counting "on" bits in integers, and other fun comparisons
 
-Runs ec2 instances for each test and outputs results to s3
+Runs ec2 instances for each benchmark test and outputs results to s3
 
 This is based on an interview question I encountered where the interviewer asked me
 how I would count "on" bits in an integer, given repeated unpredictable requests (i.e. a service)
@@ -13,95 +12,40 @@ Told me that even if it could fit (uhh, 32 bits is 4 gb?) it would take too long
 
 So, let's see how long it does take to generate ;)
 
+## Stats
 
-Current stats (post meltdown + spectre w ami-41e0b93b), per 10mm:
+Countbits, average per 10mm:
 - C ~1.0s
-- C# dotnet core 2.0.3 ~1.7-1.8s
-- Java 9 (Classes) ~11s *
-- Java 9 (Optimized primitives) ~11s *
-- Javascript / Node 8 (Readable -> pipe) ~9-10s
-- Go 1.9.2 ~13s *
-- PHP 7.0 ~28s *
-- JRuby 9.1.15.0 ~31s *
-- Ruby 2.4.3 ~34s
+- C# dotnet core 2.1.4 ~1.7-1.8s
+- Javascript / Node 8 (Readable -> pipe) ~8s
+- Java 9 (Classes) ~12s
+- Java 9 (Optimized primitives) ~12s
+- Go 1.10.1 ~14s
+- JRuby 9.1.16.0 ~27s
+- PHP 7.0 ~28s
+- Ruby 2.5.1 ~35s
 - Python 3 ~320-450s (yes 5-8 minutes!)
 - Javascript / Node 8 (Naive write) OOM crash
-^ times with a * went up, others stayed the same
 
+Relative to the past few AMIs/versions/etc:
+- Java is getting slower
+- Javascript is getting faster
+- JRuby is much faster
+- everything else is staying about the same
 
-Current stats (pre meltdown + spectre w ami-3dec9947), per 10mm:
-- C ~1.0s
-- C# dotnet core 2.0.3 ~1.7-1.8s
-- Java 9 (Classes) ~9s
-- Java 9 (Optimized primitives) ~9s
-- Javascript / Node 8 (Readable -> pipe) ~9-10s
-- Go 1.9.2 ~10-11s
-- PHP 7.0 ~25s
-- JRuby 9.1.15.0 ~25-30s
-- Ruby 2.4.3 ~31-35s
-- Python 3 ~320-450s (yes 5-8 minutes!)
-- Javascript (Naive write) OOM crash
+Fibonacci 42:
+- Javascript / Node 8 ~4s
+- Go 1.10.1 ~5s
+- C# dotnet core 2.1.4 ~13s
+- PHP 7.0 ~34s
+- Python 3 ~120s (yes 2 minutes!)
 
+## Running
 
-Setup for running a test:
-```
-TYPE=ruby
-PROFILE=...
-REGION=us-east-1
-KEYPAIR=ec2-keypair
-BUCKET=...
+Run the perf benchmarks with `. run.sh countbits` or `. run.sh fibonacci 42`
+Then download the results with `. clean.sh` (which also removes the results from your s3 bucket)
 
-# https://cloud-images.ubuntu.com/locator/ec2/  # 64 us-east-1 ebs hvm
-IMAGEID=ami-41e0b93b
-
-# http://docs.aws.amazon.com/cli/latest/userguide/controlling-output.html#controlling-output-filter
-SGID=$(aws ec2 describe-security-groups \
-    --profile $PROFILE \
-    --region $REGION \
-    --query 'SecurityGroups[?GroupName==`ssh-anywhere`].GroupId' \
-    --output text)
-echo $SGID
-
-echo $PROFILE $REGION $BUCKET $TYPE $KEYPAIR $IMAGEID $SGID
-```
-
-
-Run this to spawn an ec2 instance that will test an individual countbits type:
-```
-# https://alestic.com/2013/11/aws-cli-query/
-# http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html
-# https://stackoverflow.com/questions/10125311/how-to-fire-ec2-instances-and-upload-run-a-startup-script-on-each-of-them
-INSTANCEID=$(aws ec2 run-instances \
-    --profile $PROFILE \
-    --region $REGION \
-    --output text \
-    --query 'Instances[*].InstanceId' \
-    --image-id $IMAGEID \
-    --key-name $KEYPAIR \
-    --security-group-ids $SGID \
-    --instance-type t2.micro \
-    --user-data file://./$TYPE/run.sh \
-    --instance-initiated-shutdown-behavior terminate \
-    --iam-instance-profile Name="s3-put-profile" \
-    --count 1)
-echo $INSTANCEID
-
-
-aws ec2 create-tags \
-    --profile $PROFILE \
-    --region $REGION \
-    --resources $INSTANCEID \
-    --tags Key=Name,Value="countbits $TYPE"
-
-DOMAIN=$(aws ec2 describe-instances \
-    --profile $PROFILE \
-    --region $REGION \
-    --instance-ids $INSTANCEID \
-    --output text \
-    --query 'Reservations[*].Instances[*].PublicDnsName')
-echo $DOMAIN
-```
-
+## Debugging
 
 Some debugging and lookup tools you might want afterwards:
 ```
@@ -210,4 +154,3 @@ SGID=$(aws ec2 create-security-group \
     --output text)
 aws ec2 authorize-security-group-ingress --profile $PROFILE --region $REGION --group-id $SGID --protocol tcp --port 22 --cidr 0.0.0.0/0
 ```
-
