@@ -1,0 +1,12 @@
+#!/usr/bin/env node
+
+function recursive_fibonacci (n) {
+  return n < 1 ? 0 : n == 1 ? 1 : recursive_fibonacci(n - 1) + recursive_fibonacci(n - 2);
+}
+
+const n = parseInt(process.argv[2]);
+console.log(n);
+
+const start = new Date().getTime();
+console.log(recursive_fibonacci(n));
+console.log(Math.floor(new Date().getTime() - start));
