@@ -1,4 +1,4 @@
-sudo apt-get install -yq gcc
+sudo apt-get install -yq build-essential gcc
 
 # https://github.com/rbenv/ruby-build/issues/156
 curl https://cache.ruby-lang.org/pub/ruby/2.5/ruby-2.5.1.tar.gz \
