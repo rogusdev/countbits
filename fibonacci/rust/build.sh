@@ -1,0 +1,1 @@
+rustc fibonacci.rs

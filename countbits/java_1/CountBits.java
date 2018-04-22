@@ -62,4 +62,3 @@ public class CountBits
         System.out.println(new Gson().toJson(times));
     }
 }
-

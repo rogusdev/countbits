@@ -1,7 +1,7 @@
-defmodule ModuleName do
-  def hello do
-    IO.puts "Hello World"
+defmodule CountBits do
+  def main() do
+    IO.puts "Hello CountBits World"
   end
 end
 
-ModuleName.hello
+CountBits.main

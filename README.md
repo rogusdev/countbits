@@ -18,8 +18,8 @@ Countbits, average per 10mm:
 - C ~1.0s
 - C# dotnet core 2.1.4 ~1.7-1.8s
 - Javascript / Node 8 (Readable -> pipe) ~8s
-- Java 9 (Classes) ~12s
-- Java 9 (Optimized primitives) ~12s
+- Java 8 (Classes) ~12s
+- Java 8 (Optimized primitives) ~12s
 - Go 1.10.1 ~14s
 - JRuby 9.1.16.0 ~27s
 - PHP 7.0 ~28s
@@ -34,15 +34,19 @@ Relative to the past few AMIs/versions/etc:
 - everything else is staying about the same
 
 Fibonacci 42:
+- Java 8 ~2s
+- C ~3s
 - Javascript / Node 8 ~4s
 - Go 1.10.1 ~5s
 - C# dotnet core 2.1.4 ~13s
 - PHP 7.0 ~34s
+- Ruby 2.5.1 ~45s
 - Python 3 ~120s (yes 2 minutes!)
 
 ## Running
 
 Run the perf benchmarks with `. run.sh countbits` or `. run.sh fibonacci 42`
+
 Then download the results with `. clean.sh` (which also removes the results from your s3 bucket)
 
 ## Debugging
@@ -69,7 +73,10 @@ aws ec2 terminate-instances --profile $PROFILE --region $REGION --instance-ids $
 ```
 
 
-Initial configuration to get all the right permissions, etc in place:
+## Initial configuration 
+
+Get all the necessary AWS stuff setup, permissions, etc:
+
 ```
 # http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html
 cat << EOF > ec2-role-trust-policy.json
