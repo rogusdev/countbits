@@ -4,18 +4,18 @@ export BUCKET=...
 REGION=us-east-1
 KEYPAIR=ec2-keypair
 
-# https://cloud-images.ubuntu.com/locator/ec2/  # 64 us-east-1 ebs hvm
-IMAGEID=ami-6dfe5010
+# https://cloud-images.ubuntu.com/locator/ec2/  # amd64 us-east-1 ebs-ssd hvm
+IMAGEID=ami-013da1cc4ae87618c
 
 
-export BENCHMARK=$1
+export BENCHMARK="$1"
 
 # https://stackoverflow.com/questions/2427995/bash-no-arguments-warning-and-case-decisions
-if [[ $# -eq 0 ]]; then BENCHMARK='countbits'; fi
+if [[ $# -eq 0 ]]; then BENCHMARK="countbits"; fi
 
-case "$1" in
+case "$BENCHMARK" in
     # https://unix.stackexchange.com/questions/62333/setting-a-shell-variable-in-a-null-coalescing-fashion
-    fibonacci) export ARGS=${2:-42} ;;
+    fibonacci) export ARGS="${2:-42}" ;;
     *) ;;
 esac
 
@@ -29,6 +29,7 @@ echo $SGID
 
 echo $PROFILE $REGION $BUCKET $TYPE $KEYPAIR $IMAGEID $SGID
 
+NOW=`date +%Y%m%d%H%M%S`
 
 # https://www.cyberciti.biz/faq/bash-for-loop-array/
 types=( c csharp elixir go java java_1 java_2 jruby javascript javascript_1 javascript_2 php python3 ruby rust )
@@ -44,18 +45,22 @@ do
         continue
     fi
 
+    echo ""
+
     echo "aws s3 ls --profile $PROFILE $BUCKET/$TYPE/"
     aws s3 ls --profile $PROFILE $BUCKET/$TYPE/
 
     # https://superuser.com/questions/133780/in-bash-how-do-i-escape-an-exclamation-mark
     # https://stackoverflow.com/questions/10683349/forcing-bash-to-expand-variables-in-a-string-loaded-from-a-file
     USERDATA=$(
-        echo -e "#"'!'"/bin/bash\n\n# ----- CLONE -----\n"
+        echo -e "#"'!'"/bin/bash\n"
+        echo -e "\n# ----- CLONE -----\n"
         cat clone_repo.sh
         echo -e "\n# ----- SETUP -----\n"
         cat setup/$LANG/setup.sh
         echo -e "\n# ----- BUILD -----\n"
-        echo -e "cd countbits/$BENCHMARK/$TYPE && . ./build.sh\n\n# ----- RUN AND COPY -----\n"
+        echo -e "cd countbits/$BENCHMARK/$TYPE && . ./build.sh\n"
+        echo -e "\n# ----- RUN AND COPY -----\n"
         envsubst \$BUCKET,\$BENCHMARK,\$TYPE,\$ARGS < benchmark_type.sh
     )
 
@@ -79,7 +84,7 @@ do
         --profile $PROFILE \
         --region $REGION \
         --resources $INSTANCEID \
-        --tags Key=Name,Value="$BENCHMARK $TYPE"
+        --tags Key=Name,Value="$BENCHMARK $TYPE $NOW"
 
     DOMAIN=$(aws ec2 describe-instances \
         --profile $PROFILE \
@@ -93,6 +98,7 @@ done
 
 unset ARGS  # in case it was set for fibonacci
 
+echo ""
 echo "aws ec2 describe-instances --profile $PROFILE --region $REGION --query 'Reservations[*].Instances[*].[LaunchTime, InstanceId, State.Name, Tags[0].Value]' --output text"
 
 aws ec2 describe-instances \

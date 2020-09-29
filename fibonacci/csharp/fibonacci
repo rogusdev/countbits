@@ -1,1 +1,1 @@
-dotnet bin/Debug/netcoreapp2.0/Fibonacci.dll $1
+dotnet bin/Release/netcoreapp3.1/Fibonacci.dll $1

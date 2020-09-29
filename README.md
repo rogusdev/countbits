@@ -45,7 +45,16 @@ Fibonacci 42:
 
 ## Running
 
-Run the perf benchmarks with `. run.sh countbits` or `. run.sh fibonacci 42`
+First set your `PROFILE` and `BUCKET` in `run.sh` and `clean.sh` ala:
+
+    AWS_PROFILE=yourAWSprofile
+    AWS_BUCKET=yourAWSs3bucket
+    sed -i "s|PROFILE=...|PROFILE=$AWS_PROFILE|" run.sh
+    sed -i "s|BUCKET=...|BUCKET=$AWS_BUCKET|" run.sh
+    sed -i "s|PROFILE=...|PROFILE=$AWS_PROFILE|" clean.sh
+    sed -i "s|BUCKET=...|BUCKET=$AWS_BUCKET|" clean.sh
+
+Run the perf benchmarks with `. run.sh countbits` or `. run.sh fibonacci 42` (you can run more than one at a time).
 
 Then download the results with `. clean.sh` (which also removes the results from your s3 bucket)
 

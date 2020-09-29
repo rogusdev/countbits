@@ -1,1 +1,3 @@
-sudo apt-get install -yq php7.0-cli
+sudo apt-get install -yq php-cli
+
+php --version
