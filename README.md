@@ -15,35 +15,39 @@ So, let's see how long it does take to generate ;)
 ## Stats
 
 Countbits, average per 10mm:
-- C ~1.0s
-- C# dotnet core 2.1.4 ~1.7-1.8s
-- Javascript / Node 8 (Readable -> pipe) ~8s
-- Java 8 (Classes) ~12s
-- Java 8 (Optimized primitives) ~12s
-- Go 1.10.1 ~14s
-- JRuby 9.1.16.0 ~27s
-- PHP 7.0 ~28s
-- Ruby 2.5.1 ~35s
-- Python 3 ~320-450s (yes 5-8 minutes!)
-- Javascript / Node 8 (Naive write) OOM crash
-
-Relative to the past few AMIs/versions/etc:
-- Java is getting slower
-- Javascript is getting faster
-- JRuby is much faster
-- everything else is staying about the same
+- C ~1.1s
+- C# dotnet core 3.1.402 ~1.6s
+- Javascript / Node 14 (Readable -> pipe) ~7-9s
+- Java 11 (AdoptOpenJDK 11.0.8+10) (Classes) ~18s
+- Java 11 (AdoptOpenJDK 11.0.8+10) (Optimized primitives) ~18s
+- Go 1.15.2 ~19s
+- JRuby 9.2.13.0 ~22s
+- PHP 7.4.3 ~26s
+- Ruby 2.7.1 ~27s
+- Python 3.8.2 ~67s
+- Javascript / Node 14 (Naive write) OOM crash
+- Rust 1.46.0 ~?s (needs entire implementation)
 
 Fibonacci 42:
-- Java 8 ~2s
-- C ~3s
-- Javascript / Node 8 ~4s
-- Go 1.10.1 ~5s
-- C# dotnet core 2.1.4 ~13s
-- PHP 7.0 ~34s
-- Ruby 2.5.1 ~45s
-- Python 3 ~120s (yes 2 minutes!)
+- C ~1.1s
+- Rust 1.46.0 ~1.6s
+- Java 11 (AdoptOpenJDK 11.0.8+10) ~1.8s
+- C# dotnet core 3.1.402 ~2.7s
+- Javascript / Node 14 ~4.5s
+- Go 1.15.2 ~4.8s
+- JRuby 9.2.13.0 ~22s
+- PHP 7.4.3 ~22s
+- Ruby 2.7.1 ~35s
+- Python 3.8.2 ~105s
+
+Significant changes relative to the past test:
+- Go got much slower on both countbits and fibonacci
+- Python got faster (slightly on fibonacci, dramatically on countbits) -- but still a half dead slug
+- C# got 5x faster on fibonacci (previous result was very different vs other langues compared to countbits relative perf)
 
 ## Running
+
+_After one time setup of your ec2 account as per instructions at the bottom (role, policy, bucket, security group, keypair, etc)_
 
 First set your `PROFILE` and `BUCKET` in `run.sh` and `clean.sh` ala:
 
@@ -56,7 +60,7 @@ First set your `PROFILE` and `BUCKET` in `run.sh` and `clean.sh` ala:
 
 Run the perf benchmarks with `. run.sh countbits` or `. run.sh fibonacci 42` (you can run more than one at a time).
 
-Then download the results with `. clean.sh` (which also removes the results from your s3 bucket)
+Then download the results with `. clean.sh` (which also removes the results from your s3 bucket -- note that it does not stop running ec2 instances)
 
 ## Debugging
 
@@ -66,6 +70,9 @@ Some debugging and lookup tools you might want afterwards:
 ssh -i ~/.ssh/$KEYPAIR.pem ubuntu@$DOMAIN
 
 tail -f /var/log/cloud-init-output.log
+
+sudo su
+cat /root/countbits/fibonacci/csharp/fibonacci_*_out.txt
 
 
 aws s3 ls --profile $PROFILE $BUCKET/$TYPE/
@@ -146,9 +153,13 @@ aws s3api create-bucket --profile $PROFILE --region $REGION --bucket $BUCKET --a
 
 # http://docs.aws.amazon.com/cli/latest/userguide/cli-ec2-keypairs.html
 # http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html#how-to-generate-your-own-key-and-import-it-to-aws
-aws ec2 describe-key-pairs --profile $PROFILE
-aws ec2 create-key-pair --profile $PROFILE --key-name $KEYPAIR --query 'KeyMaterial' --output text > ~/.ssh/$KEYPAIR.pem
-chmod 400 ~/.ssh/$KEYPAIR.pem
+KEYPAIR=ec2-keypair
+REGION=us-east-1
+aws ec2 delete-key-pair --key-name $KEYPAIR --region $REGION
+aws ec2 import-key-pair --key-name $KEYPAIR --public-key-material fileb://~/.ssh/id_rsa.pub --region $REGION
+aws ec2 describe-key-pairs --profile $PROFILE --region $REGION
+#aws ec2 create-key-pair --profile $PROFILE --key-name $KEYPAIR --query 'KeyMaterial' --output text > ~/.ssh/$KEYPAIR.pem
+#chmod 400 ~/.ssh/$KEYPAIR.pem
 
 # http://skillslane.com/aws-tutorial-vpc-launch-instance-cli/
 # http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-subnets-commands-example.html
