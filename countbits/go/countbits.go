@@ -75,11 +75,7 @@ func main() {
 			c += byte((j & b[i]) >> i)
 		}
 
-		// https://stackoverflow.com/questions/16888357/convert-an-integer-to-a-byte-array
-		//bs := make([]byte, 4)
-		//binary.LittleEndian.PutUint32(bs, 31415926)
-
-		_, err := w.Write([]byte{c})
+		err := w.WriteByte(c)
 		if err != nil {
 			panic(err)
 		}
