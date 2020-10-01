@@ -5,7 +5,7 @@ REGION=us-east-1
 KEYPAIR=ec2-keypair
 
 # https://cloud-images.ubuntu.com/locator/ec2/  # amd64 us-east-1 ebs-ssd hvm
-IMAGEID=ami-013da1cc4ae87618c
+IMAGEID=ami-0c43b23f011ba5061
 
 
 export BENCHMARK="$1"
@@ -38,7 +38,7 @@ for TYPE in "${types[@]}"
 do
     export TYPE
     # https://stackoverflow.com/questions/1494178/how-to-define-hash-tables-in-bash
-    export LANG=${TYPE%%_*}
+    export TYPE_LANG=${TYPE%%_*}
 
     # https://stackoverflow.com/questions/59838/check-if-a-directory-exists-in-a-shell-script
     if [ ! -d "$BENCHMARK/$TYPE" ]; then
@@ -57,7 +57,7 @@ do
         echo -e "\n# ----- CLONE -----\n"
         cat clone_repo.sh
         echo -e "\n# ----- SETUP -----\n"
-        cat setup/$LANG/setup.sh
+        cat setup/$TYPE_LANG/setup.sh
         echo -e "\n# ----- BUILD -----\n"
         echo -e "cd countbits/$BENCHMARK/$TYPE && . ./build.sh\n"
         echo -e "\n# ----- RUN AND COPY -----\n"

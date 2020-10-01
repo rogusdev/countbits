@@ -1,4 +1,5 @@
 .vscode
 **/obj
 **/bin
-
+*.jar
+*.class
