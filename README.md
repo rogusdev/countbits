@@ -15,34 +15,35 @@ So, let's see how long it does take to generate ;)
 ## Stats
 
 Countbits, average per 10mm:
-- C ~1.1s
-- C# dotnet core 3.1.402 ~1.6s
-- Javascript / Node 14 (Readable -> pipe) ~7-9s
+- Go 1.15.2 ~0.5s
+- C ~1.0s
+- C# dotnet core 3.1.402 ~1.7s
+- Javascript / Node 14 (Naive write) OOM ~5.4s
+- Javascript / Node 14 (Readable -> pipe) ~7.7s
 - Java 11 (AdoptOpenJDK 11.0.8+10) (Classes) ~18s
 - Java 11 (AdoptOpenJDK 11.0.8+10) (Optimized primitives) ~18s
-- Go 1.15.2 ~19s
-- JRuby 9.2.13.0 ~22s
-- PHP 7.4.3 ~26s
-- Ruby 2.7.1 ~27s
-- Python 3.8.2 ~67s
-- Javascript / Node 14 (Naive write) OOM crash
+- JRuby 9.2.13.0 ~23s
+- PHP 7.4.3 ~27s
+- Ruby 2.7.1 ~28s
+- Python 3.8.2 ~101s
 - Rust 1.46.0 ~?s (needs entire implementation)
 
 Fibonacci 42:
-- C ~1.1s
-- Rust 1.46.0 ~1.6s
+- C ~1.2s
+- Rust 1.46.0 ~1.7s
 - Java 11 (AdoptOpenJDK 11.0.8+10) ~1.8s
 - C# dotnet core 3.1.402 ~2.7s
 - Javascript / Node 14 ~4.5s
-- Go 1.15.2 ~4.8s
+- Go 1.15.2 ~4.9s
 - JRuby 9.2.13.0 ~22s
-- PHP 7.4.3 ~22s
-- Ruby 2.7.1 ~35s
-- Python 3.8.2 ~105s
+- PHP 7.4.3 ~23s
+- Ruby 2.7.1 ~36s
+- Python 3.8.2 ~109s
 
 Significant changes relative to the past test:
-- Go got much slower on both countbits and fibonacci
-- Python got faster (slightly on fibonacci, dramatically on countbits) -- but still a half dead slug
+- Go got much slower on both countbits and fibonacci -- until some improvements came in for countbits to speed it up a lot!
+- (the go improvements make me wonder how much other languages could be trivially optimized as well)
+- Python got faster (slightly) -- but still a half dead slug
 - C# got 5x faster on fibonacci (previous result was very different vs other langues compared to countbits relative perf)
 
 ## Running
